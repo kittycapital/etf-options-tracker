@@ -1,8 +1,12 @@
 // scripts/fetch-data.js
 // Fetches options data from Yahoo Finance and saves to data/options.json
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ETF_SYMBOLS = ['IBIT', 'ETHA', 'FBTC', 'ARKB', 'BITB', 'GBTC'];
 
