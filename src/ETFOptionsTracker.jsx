@@ -317,7 +317,7 @@ export default function ETFOptionsTracker() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('./data/options.json');
+        const response = await fetch(import.meta.env.BASE_URL + 'data/options.json');
         if (!response.ok) throw new Error('데이터를 불러올 수 없습니다');
         const data = await response.json();
         setAllData(data);
