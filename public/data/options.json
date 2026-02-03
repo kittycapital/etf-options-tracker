@@ -1,5 +1,35 @@
 {
-  "lastUpdated": null,
-  "data": {},
-  "note": "이 파일은 GitHub Action에 의해 자동으로 업데이트됩니다."
+  "lastUpdated": "2026-02-03T10:20:15.555Z",
+  "data": {
+    "IBIT": {
+      "symbol": "IBIT",
+      "error": "HTTP 401",
+      "fetchedAt": "2026-02-03T10:20:09.292Z"
+    },
+    "ETHA": {
+      "symbol": "ETHA",
+      "error": "HTTP 401",
+      "fetchedAt": "2026-02-03T10:20:10.345Z"
+    },
+    "FBTC": {
+      "symbol": "FBTC",
+      "error": "HTTP 401",
+      "fetchedAt": "2026-02-03T10:20:11.395Z"
+    },
+    "ARKB": {
+      "symbol": "ARKB",
+      "error": "HTTP 401",
+      "fetchedAt": "2026-02-03T10:20:12.437Z"
+    },
+    "BITB": {
+      "symbol": "BITB",
+      "error": "HTTP 401",
+      "fetchedAt": "2026-02-03T10:20:13.512Z"
+    },
+    "GBTC": {
+      "symbol": "GBTC",
+      "error": "HTTP 401",
+      "fetchedAt": "2026-02-03T10:20:14.555Z"
+    }
+  }
 }
