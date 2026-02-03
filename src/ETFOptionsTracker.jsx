@@ -316,7 +316,7 @@ export default function ETFOptionsTracker() {
       // Use CORS proxy for Yahoo Finance
       const baseUrl = `https://query1.finance.yahoo.com/v7/finance/options/${symbol}`;
       const url = expiryDate ? `${baseUrl}?date=${expiryDate}` : baseUrl;
-      cconst proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
       
       const response = await fetch(proxyUrl);
       if (!response.ok) throw new Error('Failed to fetch data');
