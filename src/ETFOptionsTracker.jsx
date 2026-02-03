@@ -313,16 +313,19 @@ export default function ETFOptionsTracker() {
   const [explanationOpen, setExplanationOpen] = useState(false);
 
   // Fetch static JSON data
+  // Fetch static JSON data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(import.meta.env.BASE_URL + 'data/options.json');
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const response = await fetch(`${baseUrl}data/options.json`);
         if (!response.ok) throw new Error('데이터를 불러올 수 없습니다');
         const data = await response.json();
         setAllData(data);
         setError(null);
       } catch (err) {
+        console.error('Fetch error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
