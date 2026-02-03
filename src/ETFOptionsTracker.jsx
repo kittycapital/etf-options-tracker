@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import React, { useState, useEffect, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 
 // Crypto ETF symbols
 const ETF_SYMBOLS = [
@@ -65,16 +65,6 @@ const styles = {
     fontSize: '14px',
     cursor: 'pointer',
   },
-  button: {
-    background: 'linear-gradient(135deg, #00ff88, #00d4ff)',
-    border: 'none',
-    color: '#000',
-    padding: '10px 20px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
   priceBox: {
     display: 'flex',
     alignItems: 'center',
@@ -97,7 +87,6 @@ const styles = {
     fontSize: '12px',
     fontWeight: '600',
   },
-  // Explanation box
   explanationBox: {
     background: '#0a0a0a',
     border: '1px solid #1a1a1a',
@@ -139,7 +128,6 @@ const styles = {
     color: '#888',
     lineHeight: '1.5',
   },
-  // Stats
   statsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -163,7 +151,6 @@ const styles = {
     fontWeight: '700',
     marginTop: '8px',
   },
-  // Charts
   chartContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
@@ -184,7 +171,6 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
-  // Unusual table
   table: {
     width: '100%',
     borderCollapse: 'collapse',
@@ -258,6 +244,15 @@ const styles = {
     color: '#000',
     fontWeight: '600',
   },
+  updateBadge: {
+    display: 'inline-block',
+    background: '#1a1a1a',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    color: '#666',
+    marginLeft: '8px',
+  },
 };
 
 // Helpers
@@ -281,6 +276,17 @@ const formatDate = (timestamp) => {
   return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
 };
 
+const formatLastUpdated = (isoString) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleString('ko-KR', { 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 // Custom tooltip for charts
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -300,69 +306,42 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function ETFOptionsTracker() {
   const [selectedSymbol, setSelectedSymbol] = useState('IBIT');
-  const [optionsData, setOptionsData] = useState(null);
+  const [allData, setAllData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [selectedExpiry, setSelectedExpiry] = useState(null);
+  const [selectedExpiryIndex, setSelectedExpiryIndex] = useState(0);
   const [explanationOpen, setExplanationOpen] = useState(false);
 
-  // Fetch options data from Yahoo Finance
-  const fetchOptionsData = useCallback(async (symbol, expiryDate = null) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Use CORS proxy for Yahoo Finance
-      const baseUrl = `https://query1.finance.yahoo.com/v7/finance/options/${symbol}`;
-      const url = expiryDate ? `${baseUrl}?date=${expiryDate}` : baseUrl;
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-      
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error('Failed to fetch data');
-      
-      const data = await response.json();
-      
-      if (!data.optionChain?.result?.[0]) {
-        throw new Error('No options data available');
-      }
-      
-      const result = data.optionChain.result[0];
-      setOptionsData(result);
-      setLastUpdate(new Date());
-      
-      // Set first expiry if not set
-      if (!selectedExpiry && result.expirationDates?.length > 0) {
-        setSelectedExpiry(result.expirationDates[0]);
-      }
-      
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err.message || 'Failed to fetch options data');
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedExpiry]);
-
-  // Initial fetch
+  // Fetch static JSON data
   useEffect(() => {
-    fetchOptionsData(selectedSymbol);
-  }, [selectedSymbol]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('./data/options.json');
+        if (!response.ok) throw new Error('데이터를 불러올 수 없습니다');
+        const data = await response.json();
+        setAllData(data);
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  // Fetch when expiry changes
-  useEffect(() => {
-    if (selectedExpiry) {
-      fetchOptionsData(selectedSymbol, selectedExpiry);
-    }
-  }, [selectedExpiry, selectedSymbol]);
+  // Get current symbol data
+  const symbolData = allData?.data?.[selectedSymbol];
+  const currentExpiry = symbolData?.options?.[selectedExpiryIndex];
 
   // Process data for charts
-  const processedData = React.useMemo(() => {
-    if (!optionsData) return null;
+  const processedData = useMemo(() => {
+    if (!currentExpiry) return null;
 
-    const calls = optionsData.options?.[0]?.calls || [];
-    const puts = optionsData.options?.[0]?.puts || [];
-    const quote = optionsData.quote || {};
+    const calls = currentExpiry.calls || [];
+    const puts = currentExpiry.puts || [];
+    const quote = symbolData?.quote || {};
 
     // Total volumes
     const totalCallVolume = calls.reduce((sum, c) => sum + (c.volume || 0), 0);
@@ -373,7 +352,7 @@ export default function ETFOptionsTracker() {
     // Put/Call ratio
     const pcRatio = totalCallVolume > 0 ? (totalPutVolume / totalCallVolume).toFixed(2) : 0;
 
-    // Volume by strike (top 15 most active)
+    // Volume by strike
     const strikeMap = new Map();
     
     calls.forEach(c => {
@@ -398,31 +377,22 @@ export default function ETFOptionsTracker() {
       .slice(0, 15)
       .sort((a, b) => a.strike - b.strike);
 
-    // OI by strike
     const oiByStrike = Array.from(strikeMap.values())
       .map(s => ({ ...s, totalOI: s.callOI + s.putOI }))
       .sort((a, b) => b.totalOI - a.totalOI)
       .slice(0, 15)
       .sort((a, b) => a.strike - b.strike);
 
-    // Unusual activity (Vol/OI > 0.5)
+    // Unusual activity
     const unusualCalls = calls
       .filter(c => c.openInterest > 0 && c.volume > 0)
-      .map(c => ({
-        ...c,
-        type: 'CALL',
-        volOiRatio: c.volume / c.openInterest
-      }))
+      .map(c => ({ ...c, type: 'CALL', volOiRatio: c.volume / c.openInterest }))
       .filter(c => c.volOiRatio > 0.5)
       .sort((a, b) => b.volOiRatio - a.volOiRatio);
 
     const unusualPuts = puts
       .filter(p => p.openInterest > 0 && p.volume > 0)
-      .map(p => ({
-        ...p,
-        type: 'PUT',
-        volOiRatio: p.volume / p.openInterest
-      }))
+      .map(p => ({ ...p, type: 'PUT', volOiRatio: p.volume / p.openInterest }))
       .filter(p => p.volOiRatio > 0.5)
       .sort((a, b) => b.volOiRatio - a.volOiRatio);
 
@@ -430,7 +400,6 @@ export default function ETFOptionsTracker() {
       .sort((a, b) => b.volOiRatio - a.volOiRatio)
       .slice(0, 10);
 
-    // Pie chart data for sentiment
     const sentimentData = [
       { name: 'CALL Volume', value: totalCallVolume, color: '#00ff88' },
       { name: 'PUT Volume', value: totalPutVolume, color: '#ff4444' },
@@ -448,7 +417,7 @@ export default function ETFOptionsTracker() {
       unusualActivity,
       sentimentData,
     };
-  }, [optionsData]);
+  }, [currentExpiry, symbolData]);
 
   const currentETF = ETF_SYMBOLS.find(e => e.symbol === selectedSymbol);
 
@@ -459,7 +428,12 @@ export default function ETFOptionsTracker() {
         <div>
           <h1 style={styles.title}>🏦 Crypto ETF 옵션 트래커</h1>
           <p style={styles.subtitle}>
-            Data from Yahoo Finance • {lastUpdate ? `업데이트 ${lastUpdate.toLocaleTimeString()}` : '로딩 중...'}
+            매일 미국 장 마감 후 업데이트 (5PM EST)
+            {allData?.lastUpdated && (
+              <span style={styles.updateBadge}>
+                최근 업데이트: {formatLastUpdated(allData.lastUpdated)}
+              </span>
+            )}
           </p>
         </div>
         <div style={styles.controls}>
@@ -488,7 +462,7 @@ export default function ETFOptionsTracker() {
             value={selectedSymbol} 
             onChange={(e) => {
               setSelectedSymbol(e.target.value);
-              setSelectedExpiry(null);
+              setSelectedExpiryIndex(0);
             }}
           >
             {ETF_SYMBOLS.map(etf => (
@@ -497,14 +471,6 @@ export default function ETFOptionsTracker() {
               </option>
             ))}
           </select>
-          
-          <button 
-            style={styles.button} 
-            onClick={() => fetchOptionsData(selectedSymbol, selectedExpiry)}
-            disabled={loading}
-          >
-            {loading ? '로딩...' : '↻ 새로고침'}
-          </button>
         </div>
       </div>
 
@@ -532,30 +498,32 @@ export default function ETFOptionsTracker() {
       </div>
 
       {/* Expiry Tabs */}
-      {optionsData?.expirationDates && (
+      {symbolData?.options && symbolData.options.length > 0 && (
         <div style={styles.expiryTabs}>
           <span style={{ color: '#666', fontSize: '12px', alignSelf: 'center', marginRight: '8px' }}>만기일:</span>
-          {optionsData.expirationDates.slice(0, 8).map(exp => (
+          {symbolData.options.map((opt, idx) => (
             <button
-              key={exp}
+              key={opt.expirationDate}
               style={{
                 ...styles.expiryTab,
-                ...(selectedExpiry === exp ? styles.expiryTabActive : {})
+                ...(selectedExpiryIndex === idx ? styles.expiryTabActive : {})
               }}
-              onClick={() => setSelectedExpiry(exp)}
+              onClick={() => setSelectedExpiryIndex(idx)}
             >
-              {formatDate(exp)}
+              {formatDate(opt.expirationDate)}
             </button>
           ))}
         </div>
       )}
 
-      {loading && !processedData ? (
+      {loading ? (
         <div style={styles.loader}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
-          옵션 데이터 로딩 중...
+          데이터 로딩 중...
         </div>
-      ) : processedData && (
+      ) : symbolData?.error ? (
+        <div style={styles.error}>⚠️ {selectedSymbol}: {symbolData.error}</div>
+      ) : processedData ? (
         <>
           {/* Stats */}
           <div style={styles.statsGrid}>
@@ -703,11 +671,13 @@ export default function ETFOptionsTracker() {
             )}
           </div>
         </>
+      ) : (
+        <div style={styles.loader}>데이터가 없습니다</div>
       )}
 
       {/* Footer */}
       <div style={{ marginTop: '32px', textAlign: 'center', color: '#444', fontSize: '11px' }}>
-        Data from Yahoo Finance • 이상 거래 기준: Vol/OI {'>'} 0.5 • {currentETF?.name}
+        매일 미국 장 마감 후 자동 업데이트 • 이상 거래 기준: Vol/OI {'>'} 0.5 • {currentETF?.name}
       </div>
     </div>
   );
