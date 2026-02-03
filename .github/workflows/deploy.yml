@@ -1,12 +1,9 @@
 name: Fetch Data and Deploy
 
 on:
-  # Run daily at 10 PM UTC (5 PM EST, after market close)
   schedule:
-    - cron: '0 22 * * 1-5'  # Monday to Friday
-  # Allow manual trigger
+    - cron: '0 22 * * 1-5'
   workflow_dispatch:
-  # Also run on push to main
   push:
     branches: ['main']
 
@@ -51,13 +48,20 @@ jobs:
       - name: Build
         run: npm run build
       
+      - name: List dist contents
+        run: |
+          echo "=== dist folder contents ==="
+          ls -la dist/
+          echo "=== dist/assets contents ==="
+          ls -la dist/assets/ || echo "No assets folder"
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: 'dist'
       
       - name: Deploy to GitHub Pages
         id: deployment
