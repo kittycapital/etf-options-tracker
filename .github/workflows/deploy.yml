@@ -1,12 +1,17 @@
-name: Deploy to GitHub Pages
+name: Fetch Data and Deploy
 
 on:
+  # Run daily at 10 PM UTC (5 PM EST, after market close)
+  schedule:
+    - cron: '0 22 * * 1-5'  # Monday to Friday
+  # Allow manual trigger
+  workflow_dispatch:
+  # Also run on push to main
   push:
     branches: ['main']
-  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -15,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  fetch-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -28,6 +33,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      
+      - name: Fetch Options Data
+        run: node scripts/fetch-data.js
+      
+      - name: Commit Data
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add public/data/options.json
+          git diff --staged --quiet || git commit -m "Update options data $(date -u +%Y-%m-%d)"
+          git push || true
       
       - name: Install dependencies
         run: npm install
