@@ -1,35 +1,35 @@
 {
-  "lastUpdated": "2026-02-03T10:23:39.549Z",
+  "lastUpdated": "2026-02-03T10:27:30.456Z",
   "data": {
     "IBIT": {
       "symbol": "IBIT",
       "error": "HTTP 401",
-      "fetchedAt": "2026-02-03T10:23:33.240Z"
+      "fetchedAt": "2026-02-03T10:27:24.278Z"
     },
     "ETHA": {
       "symbol": "ETHA",
       "error": "HTTP 401",
-      "fetchedAt": "2026-02-03T10:23:34.306Z"
+      "fetchedAt": "2026-02-03T10:27:25.315Z"
     },
     "FBTC": {
       "symbol": "FBTC",
       "error": "HTTP 401",
-      "fetchedAt": "2026-02-03T10:23:35.369Z"
+      "fetchedAt": "2026-02-03T10:27:26.351Z"
     },
     "ARKB": {
       "symbol": "ARKB",
       "error": "HTTP 401",
-      "fetchedAt": "2026-02-03T10:23:36.432Z"
+      "fetchedAt": "2026-02-03T10:27:27.388Z"
     },
     "BITB": {
       "symbol": "BITB",
       "error": "HTTP 401",
-      "fetchedAt": "2026-02-03T10:23:37.482Z"
+      "fetchedAt": "2026-02-03T10:27:28.422Z"
     },
     "GBTC": {
       "symbol": "GBTC",
       "error": "HTTP 401",
-      "fetchedAt": "2026-02-03T10:23:38.548Z"
+      "fetchedAt": "2026-02-03T10:27:29.456Z"
     }
   }
 }
